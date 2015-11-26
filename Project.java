@@ -77,7 +77,7 @@ public class Project {
 		}
 	} 
 	
-	public static int getUser() {
+	public static int getUser() throws SQLException {
 		System.out.println("\nMake Selection");
 		System.out.println("1. Customer");
 		System.out.println("2. Staff");
@@ -93,7 +93,7 @@ public class Project {
 		return choice;
 	}
 
-	public static int getCustomerChoice() {
+	public static int getCustomerChoice() throws SQLException {
 		System.out.println("\nMake Selection");
 		System.out.println("1. Basic Search");
 		System.out.println("2. Create/Update/Delete Account");
@@ -109,7 +109,7 @@ public class Project {
 		return choice;
 	}
 
-	public static int getAccountChoice() {
+	public static int getAccountChoice() throws SQLException {
 		System.out.println("\n1. Create Account");
 		System.out.println("2. Update Account");
 		System.out.println("3. Delete Account");
@@ -124,7 +124,7 @@ public class Project {
 		return choice;
 	}
 
-	public static void basicSearch() {
+	public static void basicSearch() throws SQLException {
 		
 		try {
 
@@ -151,22 +151,13 @@ public class Project {
 		}
 	}
 
-	public static void createNewUser() {
+	public static void createNewUser() throws SQLException {
 
 		try {
 			System.out.print("\nEnter ID: ");
 			String id = sc.nextLine();
-			String check = id;
-			System.out.println();
-			String quer = "select ID from DB_User where ID = \'" + check + "\'";
-			myResultSet = sqlStatement.executeQuery(quer);
-			check = null;
-
-			while(myResultSet.next()) {
-				check = myResultSet.getObject(1).toString();
-			}
-
-			if(check != null) {
+			
+			if(verifyExists(id, "DB_User")) {
 				System.out.println("\nThat ID is already taken");
 				return;
 			}
@@ -180,11 +171,11 @@ public class Project {
 			System.out.print("\nEnter email: ");
 			String email = sc.nextLine();
 
-			quer = "insert into DB_User values (" + Integer.parseInt(id) + ", \'" + usern + "\', \'" + addr + "\', \'" + email + "\', \'" + passw + "\', \'n\')";
-
-			System.out.println("\nInsertion Complete...\n");
+			String quer = "insert into DB_User values (" + id + ", \'" + usern + "\', \'" + addr + "\', \'" + email + "\', \'" + passw + "\', \'n\')";
 		
 			sqlStatement.executeQuery(quer);
+
+			System.out.println("\nInsertion Complete...\n");
 
 		} catch(SQLException e) {
 			System.out.println("SQLException:" + e.getMessage() + " <BR>");
@@ -193,25 +184,24 @@ public class Project {
 		}
 	}
 
-	public static void updateUser() {
+	public static void updateUser() throws SQLException {
 
 		try {
+			
 			System.out.print("\nEnter ID: ");
 			String id = sc.nextLine();
-			String check = id;
-			System.out.println();
-			String quer = "select ID from DB_User where ID = \'" + check + "\'";
-			myResultSet = sqlStatement.executeQuery(quer);
-			check = null;
-
-			while(myResultSet.next()) {
-				check = myResultSet.getObject(1).toString();
-			}
-
-			if(check == null) {
+			
+			if(!verifyExists(id, "DB_User")) {
 				System.out.println("\nThat ID is not in the database");
 				return;
 			}
+
+			System.out.print("Enter password: ");
+
+			if(!verifyPass(id, sc.nextLine())) {
+				System.out.println("\nInvalid password");
+				return;
+			} 
 
 			System.out.print("\nEnter new name: ");
 			String usern = sc.nextLine();
@@ -222,12 +212,12 @@ public class Project {
 			System.out.print("\nEnter new email: ");
 			String email = sc.nextLine();
 
-			quer = "update DB_User set name = \'" + usern + "\', address = \'" + addr + "\', email = \'" + email + "\', password = \'" + passw + "\' where ID = \'" + id + "\'";
-
-			System.out.println("\nUpdate Complete...\n");
+			String quer = "update DB_User set name = \'" + usern + "\', address = \'" + addr + "\', email = \'" + email + "\', password = \'" + passw + "\' where ID = \'" + id + "\'";
 		
 			sqlStatement.executeQuery(quer);
 
+			System.out.println("\nUpdate Complete...\n");
+
 		} catch(SQLException e) {
 			System.out.println("SQLException:" + e.getMessage() + " <BR>");
 		} catch(Exception e) {
@@ -235,31 +225,30 @@ public class Project {
 		}
 	}
 
-	public static void deleteUser() {
+	public static void deleteUser() throws SQLException {
 		try {
+
 			System.out.print("\nEnter ID: ");
 			String id = sc.nextLine();
-			String check = id;
-			System.out.println();
-			String quer = "select ID from DB_User where ID = \'" + check + "\'";
-			myResultSet = sqlStatement.executeQuery(quer);
-			check = null;
-
-			while(myResultSet.next()) {
-				check = myResultSet.getObject(1).toString();
-			}
-
-			if(check == null) {
+			
+			if(!verifyExists(id, "DB_User")) {
 				System.out.println("\nThat ID is not in the database");
 				return;
 			}
 
-			quer = "delete from DB_User where ID = \'" + id + "\'";
+			System.out.print("Enter password: ");
 
-			System.out.println("\nDeletion Complete...\n");
+			if(!verifyPass(id, sc.nextLine())) {
+				System.out.println("\nInvalid password");
+				return;
+			} 
+
+			String quer = "delete from DB_User where ID = \'" + id + "\'";
 
 			sqlStatement.executeQuery(quer);
 
+			System.out.println("\nDeletion Complete...\n");
+
 		} catch(SQLException e) {
 			System.out.println("SQLException:" + e.getMessage() + " <BR>");
 		} catch(Exception e) {
@@ -267,31 +256,23 @@ public class Project {
 		}
 	}
 
-	public static void customerOrder() {
+	public static void customerOrder() throws SQLException {
 		try {
+
 			System.out.print("\nEnter ID: ");
 			String id = sc.nextLine();
-			String check = id;
-			System.out.println();
-			String quer = "select ID from DB_User where ID = \'" + check + "\'";
-			myResultSet = sqlStatement.executeQuery(quer);
-			check = null;
-
-			while(myResultSet.next()) {
-				check = myResultSet.getObject(1).toString();
-			}
-
-			if(check == null) {
+			
+			if(!verifyExists(id, "DB_User")) {
 				System.out.println("\nThat ID is not in the database");
 				return;
 			}
 
-			System.out.print("\nEnter password: ");
+			System.out.print("Enter password: ");
 			String passw = sc.nextLine();
 
 			boolean valid = false;
 
-			quer = "select ID from DB_User where ID = \'" + id + "\' and password = \'" + passw + "\'";
+			String quer = "select ID from DB_User where ID = \'" + id + "\' and password = \'" + passw + "\'";
 			myResultSet = sqlStatement.executeQuery(quer);
 
 			while(myResultSet.next()) {
@@ -303,31 +284,194 @@ public class Project {
 				return;
 			}
 
-			System.out.println("\nLet's begin your order!");
+			System.out.println("\n1. Place order\n2. Pay");
+			boolean letsOrder = sc.nextLine().equals("1");
 
-			System.out.println("Enter the Product ID you want to add. Enter \'done\' when finished\n");
+			if(letsOrder) {
 
-			while(true) {
-				String in = sc.nextLine();
+				System.out.print("\nEnter today's date in (DD-MON-YY) format: ");
 
-				if(in.toLowerCase().equals("done"))
-					break;
+				String date = sc.nextLine();
 
-				String quer = "select ID from DB_User where ID = \'" + check + "\'";
-				myResultSet = sqlStatement.executeQuery(quer);
-				check = null;
+				System.out.print("\nEnter a 3 digit ID for this order: ");
 
-				while(myResultSet.next()) {
-					check = myResultSet.getObject(1).toString();
+				String orderid;
+
+				while(true) {
+					orderid = sc.nextLine();
+					if(!verifyExists(orderid, "DB_Order"))
+						break;
+					System.out.print("\nAlready taken, try another 3 digit order ID: ");
 				}
+
+				createOrderID(orderid, date);
+
+				System.out.println("\nLet's begin your order!");
+
+				System.out.println("\nEnter the Product ID you want to add. Enter \'done\' when finished");
+
+				double total = 0.0;
+
+				while(true) {
+					String in = sc.nextLine();
+
+					if(in.toLowerCase().equals("done"))
+						break;
+
+					if(!productExists(in)) {
+						System.out.println("Product doesn't exist or is out of stock");
+						continue;
+					}
+
+					total += addToOrder(orderid, in);
+					
+					System.out.println("Added to order!");
+				}	
+
+				orderHelper(id, orderid, total);
 			}
 
-			
+			payOrder(id);	
 
 		} catch(SQLException e) {
 			System.out.println("SQLException:" + e.getMessage() + " <BR>");
 		} catch(Exception e) {
 			System.out.println("Exception: " + e.getMessage() + " <BR>");
 		}
+	}
+
+	public static boolean verifyExists(String id, String table) throws SQLException {
+		String quer = "select ID from " + table + " where ID = " + id;
+		myResultSet = sqlStatement.executeQuery(quer);
+		while(myResultSet.next()) {
+			return true;
+		}
+		return false;
+	}
+
+	public static boolean verifyPass(String userid, String p) throws SQLException {
+		String quer = "select password from DB_User where ID = " + userid;
+		myResultSet = sqlStatement.executeQuery(quer);
+		while(myResultSet.next()) {
+			return myResultSet.getObject(1).toString().equals(p);
+		}
+		return false;
+	}
+
+	public static boolean productExists(String id) throws SQLException {
+		String quer = "select ID, stock_quantity from DB_Product where ID = " + id;
+		myResultSet = sqlStatement.executeQuery(quer);
+		while(myResultSet.next()) {
+			if(myResultSet.getObject(2).toString().equals("0"))
+				return false;
+			return true;
+		}
+		return false;
+	}
+
+	public static void createOrderID(String id, String date) throws SQLException {
+		String quer = "insert into DB_Order values (" + id + ", 0.0, \'" + date + "\', \'n\')";
+		sqlStatement.executeQuery(quer);
+	}
+
+	public static double addToOrder(String orderid, String productid) throws SQLException {
+		String quer = "update DB_Product set stock_quantity = stock_quantity-1 where ID = " + productid;
+		sqlStatement.executeQuery(quer);
+		quer = "insert into DB_Contains values (" + orderid + ", " + productid + ")";
+		sqlStatement.executeQuery(quer);
+		quer = "select price from DB_Product where id = " + productid;
+		myResultSet = sqlStatement.executeQuery(quer);
+		while(myResultSet.next()) {
+			return Double.parseDouble(myResultSet.getObject(1).toString());
+		}
+		return 0.0;
+	}
+
+	public static void orderHelper(String userid, String orderid, double total) throws SQLException {
+		String quer = "update DB_Order set total_price = " + total + " where ID = " + orderid;
+		sqlStatement.executeQuery(quer);
+	 	quer = "insert into DB_Orders values (\'" + userid + "\', \'" + orderid + "\')";
+	 	sqlStatement.executeQuery(quer);
+	}
+
+	public static void payOrder(String userid) throws SQLException {
+		
+		String quer = "select Order_ID from DB_Orders where User_ID = \'" + userid + "\'";
+		myResultSet = sqlStatement.executeQuery(quer);
+		List<String> list = new ArrayList<String>();
+		boolean once = true;
+		
+		while(myResultSet.next()) {
+			list.add(myResultSet.getObject(1).toString());
+		}
+		
+		for(int j = 0; j < list.size(); ++j) {
+			String s = list.get(j);
+			quer = "select total_price from DB_Order where ID = " + s + "and paid = \'n\'";
+			myResultSet = sqlStatement.executeQuery(quer);
+			while(myResultSet.next()) {
+				if(once) {
+					System.out.println("\nLets pay your order(s)");	
+					System.out.println("Which order would you like to pay?\nSelect the ID or \'0\' if you don't want to pay right now\n");
+					once = false;
+				}
+				System.out.println(s + ":\t$" + Double.parseDouble(myResultSet.getObject(1).toString()));
+			}
+		}
+
+		if(once) {
+			System.out.println("\nNo unpaid orders");
+			return;
+		}
+
+		String selectedOrder = sc.nextLine();
+
+		if(selectedOrder.equals("0"))
+			return;
+
+		if(!list.contains(selectedOrder)) {
+			System.out.println("Invalid selection");
+			return;
+		}
+
+		System.out.println("\nLet's check for discounts...\n");
+		quer = "select Product_ID from DB_Contains where Order_ID = \'" + selectedOrder + "\'";
+		myResultSet = sqlStatement.executeQuery(quer);
+			
+		list.clear();
+
+		while(myResultSet.next()) 
+			list.add(myResultSet.getObject(1).toString());
+
+		double totalDiscount = 0.0;
+
+		List<String> list2 = new ArrayList<String>();
+
+		for(String s: list) {
+			quer = "select Discount_ID from DB_Discount_Available where Product_ID = " + s;
+			myResultSet = sqlStatement.executeQuery(quer);
+			while(myResultSet.next())
+				list2.add(myResultSet.getObject(1).toString());
+		}
+
+		for(String s: list2) {
+			quer = "select value from DB_Discount where ID = " + s;
+			myResultSet = sqlStatement.executeQuery(quer);
+			while(myResultSet.next())
+				totalDiscount += Double.parseDouble(myResultSet.getObject(1).toString());
+		}
+
+		System.out.println("The total available discount is:        \t$" + totalDiscount);
+		System.out.print("That means you will be paying a total of: \t$");
+		quer = "select total_price from DB_Order where ID = " + selectedOrder;
+		myResultSet = sqlStatement.executeQuery(quer);
+
+		while(myResultSet.next())
+			System.out.println(Double.parseDouble(myResultSet.getObject(1).toString()) - totalDiscount);
+
+		quer = "update DB_Order set paid = \'y\' where ID = " + selectedOrder;
+		sqlStatement.executeQuery(quer);
+
+		System.out.println("Thank you for your payment!");
 	}
 }
