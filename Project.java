@@ -60,7 +60,33 @@ public class Project {
 					}
 				}
 				else { // user is a staff member
+					if(staffSignIn()) {
+						int choice = getStaffChoice();
 
+						switch(choice) {
+
+							case 1:	// edit user
+									editUserMenu();
+									break; 
+							case 2: // edit product
+									editProductMenu();
+									break;
+							case 3: // edit order
+									editOrderMenu();
+									break;
+							case 4: // edit categories
+									break;
+							case 5: // edit discount
+									break;
+							case 6: // get total sales
+									break;
+							case 7: // get shelf locations
+									break;
+							case 8: // check low stock alerts
+									break;
+
+						}
+					}
 				}
 			}
 			
@@ -77,6 +103,125 @@ public class Project {
 		}
 	} 
 	
+	public static void editUserMenu() throws SQLException {
+		System.out.println("\n1. Create User");
+		System.out.println("2. Edit User");
+		System.out.println("3. Delete User\n");
+
+		int choice = Integer.parseInt(sc.nextLine());
+
+		if(choice == 1) {
+			createNewUser();
+		} else if(choice == 2) {
+			updateUserStaffStyle();
+		} else if(choice == 3) {
+			deleteUserStaffStyle();
+		} else {
+			System.out.println("Invalid choice");
+			return;
+		}
+	}
+
+	public static void editProductMenu() throws SQLException {
+		System.out.println("\n1. Create Product");
+		System.out.println("2. Edit Product");
+		System.out.println("3. Delete Product");
+
+		int choice = Integer.parseInt(sc.nextLine());
+
+		if(choice == 1) {
+			createNewProduct();
+		} else if(choice == 2) {
+			updateProduct();
+		} else if(choice == 3) {
+			deleteProduct();
+		} else {
+			System.out.println("Invalid choice");
+			return;
+		}
+	}
+
+	public static void editOrderMenu() throws SQLException {
+		System.out.println("\n1. Create Order");
+		System.out.println("2. Edit Order");
+		System.out.println("3. Delete Order");
+
+		int choice = Integer.parseInt(sc.nextLine());
+
+		if(choice == 1) {
+			createNewOrder();
+		} else if(choice == 2) {
+			updateOrder();
+		} else if(choice == 3) {
+			deleteOrder();
+		} else {
+			System.out.println("Invalid choice");
+			return;
+		}
+	}
+
+	public static void createNewOrder() throws SQLException {
+		try {
+			System.out.print("\nEnter ID: ");
+			String id = sc.nextLine();
+			
+			if(verifyExists(id, "DB_Order")) {
+				System.out.println("\nThat ID is already taken");
+				return;
+			}
+
+			System.out.print("\nEnter name: ");
+			String name = sc.nextLine();
+			System.out.print("\nEnter price: ");
+			String price = sc.nextLine();
+			System.out.print("\nEnter data in (DD-MMM-YY) format: ");
+			String date = sc.nextLine();
+			System.out.print("\nEnter customer ID for this order: ");
+			String customerid = sc.nextLine();
+
+			if(!verifyExists(customerid, "DB_User")) {
+				System.out.println("ID is not in the database");
+				return;
+			}
+
+			String quer = "insert into DB_Order values (" + id + ", " + price + ", \'" + date + "\', \'n\')";
+			sqlStatement.executeQuery(quer);
+			quer = "insert into DB_Orders values (" + customerid + ", " + id + ")";
+			sqlStatement.executeQuery(quer);
+
+			System.out.println("\nInsertion Complete...\n");
+
+		} catch(SQLException e) {
+			System.out.println("SQLException:" + e.getMessage() + " <BR>");
+		} catch(Exception e) {
+			System.out.println("Exception: " + e.getMessage() + " <BR>");
+		}
+	}
+
+
+	public static void deleteOrder() throws SQLException {
+		try {
+			System.out.print("\nEnter ID: ");
+			String id = sc.nextLine();
+			
+			if(!verifyExists(id, "DB_Order")) {
+				System.out.println("\nThat ID is not in the database");
+				return;
+			}
+
+			String quer = "delete from DB_Order where ID = \'" + id + "\'";
+
+			sqlStatement.executeQuery(quer);
+
+			System.out.println("\nDeletion Complete...\n");
+
+		} catch(SQLException e) {
+			System.out.println("SQLException:" + e.getMessage() + " <BR>");
+		} catch(Exception e) {
+			System.out.println("Exception: " + e.getMessage() + " <BR>");
+		}
+	}
+
 	public static int getUser() throws SQLException {
 		System.out.println("\nMake Selection");
 		System.out.println("1. Customer");
@@ -109,6 +254,26 @@ public class Project {
 		return choice;
 	}
 
+	public static int getStaffChoice() throws SQLException {
+		System.out.println("\nMake Selection");
+		System.out.println("1. Edit User Account");
+		System.out.println("2. Edit Product");
+		System.out.println("3. Edit Order");
+		System.out.println("4. Edit Categories");
+		System.out.println("5. Edit Discount");
+		System.out.println("6. Get Total Sales");
+		System.out.println("7. Get Shelf Locations");
+		System.out.println("8. Check Low Stock Alerts");
+
+		int choice = Integer.parseInt(sc.nextLine());
+
+		if(choice < 1 || choice > 8) {
+			System.out.println("\nIncorrect choice, try again\n");
+			return getStaffChoice();
+		}
+		return choice;
+	}
+
 	public static int getAccountChoice() throws SQLException {
 		System.out.println("\n1. Create Account");
 		System.out.println("2. Update Account");
@@ -120,12 +285,10 @@ public class Project {
 			System.out.println("\nIncorrect choice, try again\n");
 			return getAccountChoice();
 		}
-	
 		return choice;
 	}
 
 	public static void basicSearch() throws SQLException {
-		
 		try {
 
 			System.out.print("Search: ");
@@ -151,8 +314,35 @@ public class Project {
 		}
 	}
 
-	public static void createNewUser() throws SQLException {
+	public static boolean staffSignIn() throws SQLException {
+		System.out.print("\nEnter ID: ");
+		String id = sc.nextLine();
+		String p = verifyStaffExists(id);
 
+		if(p == null) {
+			System.out.println("\nStaff ID not in database");
+			return false;
+		} 
+
+		System.out.print("Enter password: ");
+
+		if(!sc.nextLine().equals(p)) {
+			System.out.println("\nIncorrect password");
+			return false;
+		}
+	
+		return true;
+	}
+
+	public static String verifyStaffExists(String id) throws SQLException {
+		String quer = "select password from DB_User where is_staff = \'y\' and ID = " + id;
+		myResultSet = sqlStatement.executeQuery(quer);
+		while(myResultSet.next())
+			return myResultSet.getObject(1).toString();
+		return null;
+	}
+
+	public static void createNewUser() throws SQLException {
 		try {
 			System.out.print("\nEnter ID: ");
 			String id = sc.nextLine();
@@ -184,10 +374,40 @@ public class Project {
 		}
 	}
 
-	public static void updateUser() throws SQLException {
-
+	public static void createNewProduct() throws SQLException {
 		try {
+			System.out.print("\nEnter ID: ");
+			String id = sc.nextLine();
 			
+			if(verifyExists(id, "DB_Product")) {
+				System.out.println("\nThat ID is already taken");
+				return;
+			}
+
+			System.out.print("\nEnter name: ");
+			String name = sc.nextLine();
+			System.out.print("\nEnter description: ");
+			String desc = sc.nextLine();
+			System.out.print("\nEnter quantity: ");
+			String quan = sc.nextLine();
+			System.out.print("\nEnter price: ");
+			String price = sc.nextLine();
+
+			String quer = "insert into DB_Product values (" + id + ", \'" + name + "\', \'" + desc + "\', " + quan + ", " + price + ", \'y\')";
+		
+			sqlStatement.executeQuery(quer);
+
+			System.out.println("\nInsertion Complete...\n");
+
+		} catch(SQLException e) {
+			System.out.println("SQLException:" + e.getMessage() + " <BR>");
+		} catch(Exception e) {
+			System.out.println("Exception: " + e.getMessage() + " <BR>");
+		}
+	}
+
+	public static void updateUser() throws SQLException {
+		try {
 			System.out.print("\nEnter ID: ");
 			String id = sc.nextLine();
 			
@@ -225,6 +445,100 @@ public class Project {
 		}
 	}
 
+	public static void updateOrder() throws SQLException {
+		try {
+			System.out.print("\nEnter ID: ");
+			String id = sc.nextLine();
+			
+			if(!verifyExists(id, "DB_Order")) {
+				System.out.println("\nThat ID is not in the database");
+				return;
+			}
+
+			System.out.print("\nEnter name: ");
+			String name = sc.nextLine();
+			System.out.print("\nEnter price: ");
+			String price = sc.nextLine();
+			System.out.print("\nEnter data in (DD-MMM-YY) format: ");
+			String date = sc.nextLine();
+			
+			String quer = "update DB_Product set name = \'" + name + "\', price = \'" + price + "\', date = \'" + date + "\' where ID = " + id;
+		
+			sqlStatement.executeQuery(quer);
+
+			System.out.println("\nUpdate Complete...\n");
+
+		} catch(SQLException e) {
+			System.out.println("SQLException:" + e.getMessage() + " <BR>");
+		} catch(Exception e) {
+			System.out.println("Exception: " + e.getMessage() + " <BR>");
+		}
+	}
+
+	public static void updateUserStaffStyle() throws SQLException {
+		try {
+			System.out.print("\nEnter ID: ");
+			String id = sc.nextLine();
+			
+			if(!verifyExists(id, "DB_User")) {
+				System.out.println("\nThat ID is not in the database");
+				return;
+			} 
+
+			System.out.print("\nEnter new name: ");
+			String usern = sc.nextLine();
+			System.out.print("\nEnter new password: ");
+			String passw = sc.nextLine();
+			System.out.print("\nEnter new address: ");
+			String addr = sc.nextLine();
+			System.out.print("\nEnter new email: ");
+			String email = sc.nextLine();
+
+			String quer = "update DB_User set name = \'" + usern + "\', address = \'" + addr + "\', email = \'" + email + "\', password = \'" + passw + "\' where ID = \'" + id + "\'";
+		
+			sqlStatement.executeQuery(quer);
+
+			System.out.println("\nUpdate Complete...\n");
+
+		} catch(SQLException e) {
+			System.out.println("SQLException:" + e.getMessage() + " <BR>");
+		} catch(Exception e) {
+			System.out.println("Exception: " + e.getMessage() + " <BR>");
+		}
+	}
+
+	public static void updateProduct() throws SQLException {
+		try {
+			System.out.print("\nEnter ID: ");
+			String id = sc.nextLine();
+			
+			if(!verifyExists(id, "DB_Poduct")) {
+				System.out.println("\nThat ID is not in the database");
+				return;
+			} 
+			
+			System.out.print("\nEnter new name: ");
+			String name = sc.nextLine();
+			System.out.print("\nEnter new description: ");
+			String desc = sc.nextLine();
+			System.out.print("\nEnter new quantity: ");
+			String quan = sc.nextLine();
+			System.out.print("\nEnter new price: ");
+			String price = sc.nextLine();
+
+			String quer = "update DB_Product set name = \'" + name + "\', description = \' + " + desc + "\', stock_quantity = " + quan + ", price = " + price + " where ID = " + id;
+		
+			sqlStatement.executeQuery(quer);
+
+			System.out.println("\nUpdate Complete...\n");
+
+		} catch(SQLException e) {
+			System.out.println("SQLException:" + e.getMessage() + " <BR>");
+		} catch(Exception e) {
+			System.out.println("Exception: " + e.getMessage() + " <BR>");
+		}
+	}
+
 	public static void deleteUser() throws SQLException {
 		try {
 
@@ -242,6 +556,54 @@ public class Project {
 				System.out.println("\nInvalid password");
 				return;
 			} 
+
+			String quer = "delete from DB_User where ID = \'" + id + "\'";
+
+			sqlStatement.executeQuery(quer);
+
+			System.out.println("\nDeletion Complete...\n");
+
+		} catch(SQLException e) {
+			System.out.println("SQLException:" + e.getMessage() + " <BR>");
+		} catch(Exception e) {
+			System.out.println("Exception: " + e.getMessage() + " <BR>");
+		}
+	}
+
+	public static void deleteProduct() throws SQLException {
+		try {
+
+			System.out.print("\nEnter ID: ");
+			String id = sc.nextLine();
+			
+			if(!verifyExists(id, "DB_Product")) {
+				System.out.println("\nThat ID is not in the database");
+				return;
+			}
+
+			String quer = "delete from DB_Product where ID = " + id;
+
+			sqlStatement.executeQuery(quer);
+
+			System.out.println("\nDeletion Complete...\n");
+
+		} catch(SQLException e) {
+			System.out.println("SQLException:" + e.getMessage() + " <BR>");
+		} catch(Exception e) {
+			System.out.println("Exception: " + e.getMessage() + " <BR>");
+		}
+	}
+
+	public static void deleteUserStaffStyle() throws SQLException {
+		try {
+
+			System.out.print("\nEnter ID: ");
+			String id = sc.nextLine();
+			
+			if(!verifyExists(id, "DB_User")) {
+				System.out.println("\nThat ID is not in the database");
+				return;
+			}
 
 			String quer = "delete from DB_User where ID = \'" + id + "\'";
 
