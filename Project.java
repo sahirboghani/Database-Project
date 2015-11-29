@@ -83,13 +83,18 @@ public class Project {
 							case 6:	// add supplier
 									editSupplierMenu();
 									break;
-							case 7: // get total sales
+							case 7: // add shelf
+									editShelfMenu();
 									break;
-							case 8: // get shelf locations
+							case 8: // get total sales
+									getTotalSales();
 									break;
-							case 9: // check low stock alerts
+							case 9: // get shelf locations
+									getShelfLocations();
 									break;
-
+							case 10: // get low stock alerts
+									getAlerts();
+									break;
 						}
 					}
 				}
@@ -213,6 +218,22 @@ public class Project {
 			createSupplier();
 		} else if(choice == 2) {
 			attachProduct();
+		} else {
+			System.out.println("Invalid choice");
+			return;
+		}
+	}
+
+	public static void editShelfMenu() throws SQLException {
+		System.out.println("\n1. Create Shelf");
+		System.out.println("2. Attach Shelf");
+
+		int choice = Integer.parseInt(sc.nextLine());
+
+		if(choice == 1) {
+			createShelf();
+		} else if(choice == 2) {
+			attachShelf();
 		} else {
 			System.out.println("Invalid choice");
 			return;
@@ -461,6 +482,34 @@ public class Project {
 		}
 	}
 
+	public static void createShelf() throws SQLException {
+		try {
+			System.out.print("\nEnter ID: ");
+			String id = sc.nextLine();
+			
+			if(verifyExists(id, "DB_Shelf")) {
+				System.out.println("\nThat ID is already taken");
+				return;
+			}
+
+			System.out.print("\nEnter name: ");
+			String name = sc.nextLine();
+			System.out.print("\nEnter available quantity: ");
+			String quan = sc.nextLine();
+
+			String quer = "insert into DB_Shelf values (" + id + ", \'" + name + "\', " + quan + ")";
+		
+			sqlStatement.executeQuery(quer);
+
+			System.out.println("\nInsertion Complete...\n");
+
+		} catch(SQLException e) {
+			System.out.println("SQLException:" + e.getMessage() + " <BR>");
+		} catch(Exception e) {
+			System.out.println("Exception: " + e.getMessage() + " <BR>");
+		}
+	}
+
 	public static void updateUser() throws SQLException {
 		try {
 			System.out.print("\nEnter ID: ");
@@ -676,6 +725,52 @@ public class Project {
 		}
 	}
 
+	public static void attachShelf() throws SQLException {
+		try {
+			System.out.print("\nEnter Product ID: ");
+			String pid = sc.nextLine();
+
+			System.out.print("\nEnter Shelf ID: ");
+			String sid = sc.nextLine();
+			
+			if(!verifyExists(pid, "DB_Product") || !verifyExists(sid, "DB_Shelf")) {
+				System.out.println("\nThat ID is not in the database");
+				return;
+			}
+
+			String quer = "insert into DB_Location values (" + pid + ", " + sid + ")";
+		
+			sqlStatement.executeQuery(quer);
+
+			System.out.println("\nShelf Attached...\n");
+
+		} catch(SQLException e) {
+			System.out.println("SQLException:" + e.getMessage() + " <BR>");
+		} catch(Exception e) {
+			System.out.println("Exception: " + e.getMessage() + " <BR>");
+		}
+	}
+
+	public static void getTotalSales() throws SQLException {
+		try {
+
+			String quer = "select DB_Supplier.name, sum(DB_Product.price) from DB_Contains join DB_Supplys on DB_Contains.Product_ID = DB_Supplys.Product_ID join DB_Product on DB_Contains.Product_ID = DB_Product.ID join DB_Supplier on DB_Supplys.Supplier_ID = DB_Supplier.ID group by DB_Supplier.name";
+		
+			myResultSet = sqlStatement.executeQuery(quer);
+
+			System.out.println();
+
+			while(myResultSet.next()) {
+				System.out.println(myResultSet.getObject(1).toString() + "\t\t$" + myResultSet.getObject(2).toString());
+			}
+
+		} catch(SQLException e) {
+			System.out.println("SQLException:" + e.getMessage() + " <BR>");
+		} catch(Exception e) {
+			System.out.println("Exception: " + e.getMessage() + " <BR>");
+		}
+	}
+
 	public static void deleteUser() throws SQLException {
 		try {
 
@@ -825,6 +920,42 @@ public class Project {
 		}
 	}
 
+	public static void getShelfLocations() throws SQLException {
+		try {
+			System.out.print("\nEnter Order ID: ");
+			String id = sc.nextLine();
+			
+			if(!verifyExists(id, "DB_Order")) {
+				System.out.println("\nThat ID is not in the database");
+				return;
+			}
+
+			String quer = "select Product_ID from DB_Contains where Order_ID = " + id;
+
+			myResultSet = sqlStatement.executeQuery(quer);
+
+			List<String> list = new ArrayList<String>();
+
+			while(myResultSet.next())
+				list.add(myResultSet.getObject(1).toString());
+		
+			System.out.println();
+
+			for(String s: list) {
+
+				quer = "select DB_Product.name, DB_Shelf.name from DB_Location join DB_Product on DB_Location.Product_ID = DB_Product.ID join DB_Shelf on DB_Location.Shelf_ID = DB_Shelf.ID where DB_Location.Product_ID = " + s;
+				myResultSet = sqlStatement.executeQuery(quer);
+				while(myResultSet.next()) 
+					System.out.println(myResultSet.getObject(1).toString() + "\t\t" + myResultSet.getObject(2).toString());
+			}
+
+		} catch(SQLException e) {
+			System.out.println("SQLException:" + e.getMessage() + " <BR>");
+		} catch(Exception e) {
+			System.out.println("Exception: " + e.getMessage() + " <BR>");
+		}
+	}
+
 	public static int getUser() throws SQLException {
 		System.out.println("\nMake Selection");
 		System.out.println("1. Customer");
@@ -859,19 +990,20 @@ public class Project {
 
 	public static int getStaffChoice() throws SQLException {
 		System.out.println("\nMake Selection");
-		System.out.println("1. Edit User Account");
-		System.out.println("2. Edit Product");
-		System.out.println("3. Edit Order");
-		System.out.println("4. Edit Categories");
-		System.out.println("5. Edit Discount");
-		System.out.println("6. Edit Supplier Menu");
-		System.out.println("7. Get Total Sales");
-		System.out.println("8. Get Shelf Locations");
-		System.out.println("9. Check Low Stock Alerts");
+		System.out.println("1.  Edit User Account");
+		System.out.println("2.  Edit Product");
+		System.out.println("3.  Edit Order");
+		System.out.println("4.  Edit Categories");
+		System.out.println("5.  Edit Discount");
+		System.out.println("6.  Edit Supplier Menu");
+		System.out.println("7.  Edit Shelf Menu");
+		System.out.println("8.  Get Total Sales");
+		System.out.println("9.  Get Shelf Locations");
+		System.out.println("10. Get Low Stock Alerts");
 
 		int choice = Integer.parseInt(sc.nextLine());
 
-		if(choice < 1 || choice > 9) {
+		if(choice < 1 || choice > 10) {
 			System.out.println("\nIncorrect choice, try again\n");
 			return getStaffChoice();
 		}
@@ -909,6 +1041,47 @@ public class Project {
 				System.out.println("Stock Quantity:\t\t\t" + myResultSet.getObject(4).toString());
 				System.out.println("Price:         \t\t\t" + myResultSet.getObject(5).toString());
 				System.out.println("Active:        \t\t\t" + myResultSet.getObject(6).toString());					 
+			}
+
+		} catch(SQLException e) {
+			System.out.println("SQLException:" + e.getMessage() + " <BR>");
+		} catch(Exception e) {
+			System.out.println("Exception: " + e.getMessage() + " <BR>");
+		}
+	}
+
+	public static void getAlerts() throws SQLException {
+		try {
+
+			String q = "select * from DB_Alerts";
+			myResultSet = sqlStatement.executeQuery(q);
+			
+			String title = null;
+
+			while(myResultSet.next()) {
+				title = "\nOut of Stock Products\n";
+				break;
+			}
+
+			if(title == null) {
+				System.out.println("\nNo alerts at this time");
+				return;
+			}
+
+			System.out.println(title);
+	
+			myResultSet = sqlStatement.executeQuery(q);
+
+			while(myResultSet.next()) 
+				System.out.println("Product ID: " + myResultSet.getObject(1).toString() + "\t\tName: " + myResultSet.getObject(2).toString());
+
+			System.out.print("\nClear alerts? 'y' or 'n' ");
+
+			boolean clear = sc.nextLine().equals("y");
+
+			if(clear) {
+				q = "delete from DB_Alerts";
+				sqlStatement.executeQuery(q);
 			}
 
 		} catch(SQLException e) {
