@@ -1492,20 +1492,13 @@ public class Project {
 		
 		date = convertFormat(date);
 
-		System.out.println("here1");
-		System.out.println(date);
-
 		DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-		System.out.println("here2");
 
 		java.util.Date past = format.parse(date);
-		System.out.println("here3");
 
 		java.util.Date date_today = format.parse(format.format(new java.util.Date()));
-		System.out.println("here4");
 
 		Calendar calendar_today = Calendar.getInstance();
-		System.out.println("here5");
 	
 		calendar_today.setTime(date_today);
 
